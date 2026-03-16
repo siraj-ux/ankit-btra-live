@@ -1,0 +1,260 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+@layer base {
+  :root {
+    /* Deep Indigo / Royal Purple Primary */
+    --primary: 243 75% 35%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 243 80% 45%;
+    
+    /* Warm Gold / Amber Secondary */
+    --secondary: 40 95% 50%;
+    --secondary-foreground: 243 75% 15%;
+    --secondary-light: 40 90% 65%;
+    
+    /* Soft Peach / Light Sand Accent */
+    --accent: 25 70% 92%;
+    --accent-foreground: 243 75% 25%;
+    
+    /* Off-white / Light Neutral Backgrounds */
+    --background: 40 30% 98%;
+    --foreground: 243 50% 15%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 243 50% 15%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 243 50% 15%;
+    
+    --muted: 40 20% 95%;
+    --muted-foreground: 243 20% 45%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 243 75% 35%;
+    
+    --radius: 0.75rem;
+    
+    /* Custom gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(243 75% 35%) 0%, hsl(270 70% 40%) 50%, hsl(243 80% 45%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(40 95% 50%) 0%, hsl(35 100% 55%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(40 30% 98%) 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(243 50% 15% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(243 50% 15% / 0.07), 0 2px 4px -2px hsl(243 50% 15% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(243 50% 15% / 0.08), 0 4px 6px -4px hsl(243 50% 15% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(243 50% 15% / 0.1), 0 8px 10px -6px hsl(243 50% 15% / 0.05);
+    --shadow-gold: 0 4px 20px -2px hsl(40 95% 50% / 0.35);
+    --shadow-primary: 0 4px 20px -2px hsl(243 75% 35% / 0.35);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 243 50% 8%;
+    --foreground: 40 30% 95%;
+    --card: 243 45% 12%;
+    --card-foreground: 40 30% 95%;
+    --popover: 243 45% 12%;
+    --popover-foreground: 40 30% 95%;
+    --primary: 243 75% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 95% 55%;
+    --secondary-foreground: 243 50% 10%;
+    --muted: 243 30% 18%;
+    --muted-foreground: 40 20% 65%;
+    --accent: 243 40% 20%;
+    --accent-foreground: 40 30% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 243 30% 20%;
+    --input: 243 30% 20%;
+    --ring: 243 75% 60%;
+  }
+}
+
+:root {
+  --font-philosopher: 'Philosopher', serif;
+}
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+}
+
+@layer components {
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .gradient-gold {
+    background: var(--gradient-gold);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+  
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+  
+  .shadow-primary {
+    box-shadow: var(--shadow-primary);
+  }
+  
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+    background-size: 200% 100%;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-slow-spin {
+  animation: slow-spin 90s linear infinite;
+}
+
+.font-philosopher {
+  font-family: var(--font-philosopher);
+}
+
+.font-philosopher-bold {
+  font-family: var(--font-philosopher);
+  font-weight: 900;
+}
+
+/* Default state */
+.case-study-box {
+  background-color: #f8fafc;
+  border-color: rgba(1, 40, 64, 0.2);
+  color: #012840;
+  box-shadow: 0 10px 30px rgba(1, 40, 64, 0.08);
+}
+
+/* Active on scroll */
+.case-study-box.active {
+  background-color: #012840;
+  border-color: #facc15; /* yellow accent */
+  color: #ffffff;
+  box-shadow: 0 20px 50px rgba(1, 40, 64, 0.6);
+  transform: scale(1.03);
+}
+
+/* ===== LOGO MARQUEE (NO OVERFLOW VERSION) ===== */
+
+/* ===== ABSOLUTE SAFE AUTO-SCROLL (NO OVERFLOW) ===== */
+
+.logo-marquee {
+  will-change: transform;
+  animation: logo-marquee-move 10s linear infinite;
+}
+
+@keyframes logo-marquee-move {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* 🔒 HARD STOP HORIZONTAL OVERFLOW (MOBILE FIX) */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden !important;
+}

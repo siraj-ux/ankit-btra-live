@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Redirecting…</title>
+<script>
+  (function () {
+    var l = window.location;
+    var q = l.search ? l.search + "&" : "?";
+    q += "p=" + encodeURIComponent(l.pathname) +
+         (l.hash ? "&h=" + encodeURIComponent(l.hash) : "");
+    l.replace(l.protocol + "//" + l.host + "/" + q);
+  })();
+</script></head><body>Redirecting…</body></html>
