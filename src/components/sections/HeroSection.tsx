@@ -199,11 +199,11 @@ export const HeroSection = () => {
           <div className="lg:pl-8">
             <div className="bg-white rounded-2xl shadow-xl max-w-md mx-auto overflow-hidden">
               <img
-                src="./coach2.webp"
-                alt="Ankiit Btra - India's Top Numerologist"
-                className="w-full h-[400px] md:h-[420px] object-cover"
-                loading="lazy"
-              />
+              src="./coach2.webp"
+              alt="Ankiit Btra - India's Top Numerologist"
+              className="w-full h-[400px] md:h-[420px] object-cover object-top"
+              loading="lazy"
+            />
 
               <div className="p-2 text-center">
                 <h3 className="text-2xl font-extrabold text-gray-900">
