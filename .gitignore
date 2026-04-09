@@ -28,3 +28,4 @@ code.js
 .env
 .env.*
 !.env.example
+.name
