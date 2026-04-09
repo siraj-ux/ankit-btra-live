@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Calendar, Clock, Globe, Video } from "lucide-react";
+import SubscribeButton from "../../SubscribeButton";
+import { getUTMParams, trackAddToCart, trackLead } from "@/utils/gtm";
+import { PRODUCT1, PRODUCT2, WEBINAR_NAME_2 } from "@/utils/product-info";
 
 /* 🔗 DATE & TIME CSV */
 const DATE_TIME_CSV =
@@ -84,18 +87,30 @@ export const HeroSectionWatch = () => {
     }
 
     setLoading(true);
-
-    // Construct Query Parameters to pass data to OTO page
-    const query = new URLSearchParams({
+    trackLead(PRODUCT2, form)
+    const transactionId = `${Date.now()}-${form.name.slice(0,5)}`;
+    // SAVE DATA TO SESSION STORAGE AS BACKUP
+    const userData = {
+      transactionId: transactionId,
       full_name: form.name,
       email: form.email,
       phone: form.phone,
       profession: form.profession,
       age_range: form.age_range,
-      utm_source: "facebook",
-      utm_campaign: "wristwatch_workshop",
+      workshop: `${WEBINAR_NAME_2} FB`,
+    };
+    sessionStorage.setItem("user_details", JSON.stringify(userData));
+
+    // Construct Query Parameters to pass data to OTO page
+    const query = new URLSearchParams({
+      // utm_source: "facebook",
+      // utm_campaign: "wristwatch_workshop",
+      ...getUTMParams(),
+      transaction_id: transactionId,
     }).toString();
 
+
+    trackAddToCart(PRODUCT2)
     // Redirect to OTO Page (Data is sent to sheet from there)
     window.location.href = `/oto-watch-fb?${query}`;
   };
@@ -145,9 +160,9 @@ export const HeroSectionWatch = () => {
             <div className="bg-white rounded-2xl p-6 md:p-8 shadow-2xl max-w-md w-full text-black" id="register">
               <h3 className="text-2xl font-bold text-center mb-6">Fill Your Details</h3>
               <form className="space-y-4" onSubmit={handleSubmit}>
-                <Input label="Full Name *" name="name" value={form.name} onChange={handleChange} />
-                <Input label="Email Address *" name="email" value={form.email} onChange={handleChange} />
-                <Input label="Phone Number *" name="phone" value={form.phone} onChange={handleChange} />
+                <Input label="Full Name *" name="name" type="text" value={form.name} onChange={handleChange} />
+                <Input label="Email Address *" name="email" type="email" value={form.email} onChange={handleChange} />
+                <Input label="Phone Number *" name="phone" type="tel" value={form.phone} onChange={handleChange} />
                 <Select label="Age *" name="age_range" value={form.age_range} onChange={handleChange}>
                   <option value="not_selected">Select Age Range</option>
                   <option value="below_18">Below 18</option>
@@ -164,13 +179,19 @@ export const HeroSectionWatch = () => {
                   <option value="freelancer">Freelancer / Self-Employed</option>
                   <option value="homemaker">Homemaker</option>
                 </Select>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full mt-4 bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold py-4 rounded-xl text-lg transition disabled:opacity-60"
-                >
-                  {loading ? "Redirecting..." : "FREE Wristwatch Workshop"}
-                </button>
+                <SubscribeButton
+                  label={loading ? "Redirecting..." : "FREE Wristwatch Workshop"}
+                  ctaLocation="hero_section_watch"
+                  onClick={() => {
+                    if (!loading) {
+                      const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+                      handleSubmit(fakeEvent);
+                    }
+                  }}
+                  className={`w-full mt-4 bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold py-4 rounded-xl text-lg transition flex items-center justify-center ${
+                    loading ? "opacity-60 pointer-events-none" : ""
+                  }`}
+                />
               </form>
             </div>
             <div className="max-w-md text-left mt-6 space-y-4">
@@ -201,11 +222,11 @@ const Detail = ({ icon, label, value }: { icon: React.ReactNode; label: string; 
   </div>
 );
 
-const Input = ({ label, name, value, onChange }: { label: string; name: string; value: string; onChange: React.ChangeEventHandler<HTMLInputElement>; }) => (
+const Input = ({ label, name, value, onChange, type}: { label: string; name: string; value: string; type: string; onChange: React.ChangeEventHandler<HTMLInputElement>; }) => (
   <div>
     <label className="text-sm font-semibold">{label}</label>
     <input
-      type="text"
+      type={type || "text"}
       name={name}
       value={value}
       onChange={onChange}

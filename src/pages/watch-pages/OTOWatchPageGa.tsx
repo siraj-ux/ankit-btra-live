@@ -1,14 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  CheckCircle,
   ArrowRight,
   Sparkles,
   Gift,
-  TrendingUp,
-  ShieldCheck,
   Clock,
+  Loader2
 } from 'lucide-react';
-import { useFacebookPixel } from "@/hooks/usePIxelWatch";
+// import { useFacebookPixel } from "@/hooks/usePIxelWatch";
+import { useUTMParams } from "@/hooks/useUTMParams";
+import { useRazorpay } from "@/hooks/useRazorpay";
+import { toast } from "sonner";
+import { trackAddToCart, trackFormSubmit, trackPurchase } from "@/utils/gtm";
+import { 
+  GA_ORDER,
+  GA_PRODUCT2, 
+  GA_PRODUCT2_OTO, 
+  RAZORPAY_DESCRIPTION, 
+  RAZORPAY_PRODUCT_NAME, 
+  WEBINAR_NAME_2
+} from "@/utils/product-info";
+
+/* 🔗 APPS SCRIPT URL */
+const SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycby6O9cD_HsMp9Ws8QJmI2UtvCAmY1uyTDa7wgBfCnEJtSNH-L0GOoTiFMonqlcQZjxu/exec";
+
+/* 🔗 DATE & TIME & WHATSAPP CSV */
+const DATE_TIME_CSV =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA1mZDhz4voyKH_izB4TrrAX2MXMc5Dm3AiGjuLftCweG8I_FY9Z1SZcTHwd_ymhP2LtrFPrU-feDX/pub?gid=18023713&single=true&output=csv";
 
 const books = [
   { title: 'Money Flow Mastery', desc: 'Paisa stable karne ke liye', image: '/3.png' },
@@ -19,34 +37,144 @@ const books = [
 ];
 
 export const OTOWatchPageGa = () => {
-  useFacebookPixel({
-    eventName: "Lead_Watch",
-  });
-
-  // INITIAL STATE SET TO NULL (No radio button selected by default)
+  const utmParams = useUTMParams();
+  const { initiatePayment, loading: razorpayLoading } = useRazorpay();
   const [choice, setChoice] = useState<'yes' | 'no' | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [whatsappLink, setWhatsappLink] = useState("https://hi.switchy.io/hiswitchywatch");
+
+  // Facebook Pixel for Page View
+
+  useEffect(() => {
+    document.title = "Wristwatch Workshop | GA Upgrade";
+    fetch(DATE_TIME_CSV)
+      .then((res) => res.text())
+      .then((text) => {
+        const rows = text.split("\n");
+        if (rows.length > 1) {
+          const cols = rows[1].split(",");
+          const dynamicLink = cols[2]?.trim();
+          if (dynamicLink && dynamicLink.startsWith("http")) {
+            setWhatsappLink(dynamicLink);
+          }
+        }
+      })
+      .catch(() => console.error("Failed to fetch WhatsApp link"));
+  }, []);
 
   const params = new URLSearchParams(window.location.search);
-  const fullName = params.get('full_name') || '';
-  const email = params.get('email') || '';
-  const phone = params.get('phone') || '';
-  const city = params.get('city') || 'NA';
+  const savedData = JSON.parse(sessionStorage.getItem("user_details") || "{}")
 
-  const handleContinue = () => {
-    if (choice === 'yes') {
-      const razorpayBase = 'https://pages.razorpay.com/pl_S6a2oIr2Ld8yo0/view';
-      const queryParams = new URLSearchParams({
-        full_name: fullName,
+  console.log("Saved Data from Session Storage:", savedData);
+  const fullName = savedData.full_name || '';
+  const email = savedData.email || '';
+  const phone = savedData.phone || '';
+  const city = savedData.city || '';
+  const profession =  savedData.profession || '';
+  const ageRange = savedData.age_range || '';
+  const transactionId = savedData.transaction_id || '';
+  const workshop = savedData.workshop || '';
+
+  const trackToSheet = async (status: string) => {
+    try {
+      // BACKUP: Get from Session Storage if URL params are missing
+    
+      const body = new URLSearchParams({
+        name: fullName, 
         email: email,
         phone: phone,
-        city: city,
-        course_name: 'Wrist Watch Workshop - FB',
-      }).toString();
-      window.location.href = `${razorpayBase}?${queryParams}`;
+        profession: profession,
+        age_range: ageRange,
+        transactionId: transactionId,
+        workshop: workshop,
+        ...utmParams,
+        utm_source: "google",
+        utm_campaign: "wristwatch_workshop",
+        utm_term: status
+      });
+      await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body });
+    } catch (error) {
+      console.error("Sheet update failed", error);
+    }
+  };
+
+  const handleTopJoin = async () => {
+    if (loading) return;
+    setLoading(true);
+
+    // trackAddToCart(GA_PRODUCT2);
+
+    if (fullName || email || phone) {
+      await trackToSheet("ga_free_skip");
+    }
+    window.location.href = whatsappLink;
+  };
+
+  const handleContinue = async () => {
+    if (!choice || loading || razorpayLoading) return; 
+    setLoading(true);
+    
+    const status = choice === 'yes' ? "ga_paid_selected" : "ga_free_skip";
+    
+    if (fullName || email || phone) {
+      await trackToSheet(status);
     }
 
-    if (choice === 'no') {
-      window.location.href = 'https://hi.switchy.io/hiswitchywatch';
+    if (choice === 'yes') {
+      const product = GA_PRODUCT2_OTO;
+      
+      trackAddToCart(product);
+      const workshop = `${WEBINAR_NAME_2} GA + 5 ebooks bundle`;
+      // Backup session data for Razorpay notes
+      const sessionData = typeof window !== "undefined" 
+        ? JSON.parse(sessionStorage.getItem("user_details") || "{}") 
+        : {};
+
+      trackFormSubmit({
+        formData: {
+          name: fullName,
+          email: email,
+          phone: phone,
+          city: city,
+          courseName: product.item_name
+        }, 
+        formName: "OTO Watch GA Form"
+      });
+
+      const result = await initiatePayment({
+        amount: product.price,
+        productName: RAZORPAY_PRODUCT_NAME,
+        description: RAZORPAY_DESCRIPTION,
+        prefill: {
+          name: fullName,
+          email: email,
+          contact: phone,
+        },
+        notes: {
+          ...savedData,
+          ...utmParams,
+          workshop: workshop,
+          page_url: window.location.href,
+        }
+      });
+
+      if (result.status === "success") {
+        const successParams = new URLSearchParams({
+          payment_id: result.paymentId || "",
+          order_id: result.orderId || "",
+          transaction_id: transactionId || "",
+          ...utmParams 
+        });
+        window.location.href = `/oto-watch-ga-ty?${successParams.toString()}`;
+      } else {
+        if (result.error !== "Payment cancelled by user") {
+          toast.error(result.error || "Payment failed");
+        }
+        setLoading(false);
+      }
+    } else {
+      trackAddToCart(GA_PRODUCT2);
+      window.location.href = whatsappLink;
     }
   };
 
@@ -59,50 +187,38 @@ export const OTOWatchPageGa = () => {
   return (
     <section className="min-h-screen bg-[#0b0b0b] py-10 md:py-20 text-white font-sans">
       <div className="container max-w-7xl mx-auto px-4">
-        
-        {/* TOP WHATSAPP BUTTON WITH RED NOTE */}
+        {/* TOP WHATSAPP BUTTON */}
         <div className="flex flex-col items-center mb-12">
-          <a
-            href="https://hi.switchy.io/hiswitchywatch"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-3 bg-[#25D366] hover:bg-[#1ebd5b] text-white font-bold text-base md:text-lg rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(37,211,102,0.3)]"
+          <button
+            onClick={handleTopJoin}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-8 py-3 bg-[#25D366] hover:bg-[#1ebd5b] text-white font-bold text-base md:text-lg rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(37,211,102,0.3)] disabled:opacity-70"
           >
-            <MiniWhatsAppLogo />
-            Join WhatsApp Group
-          </a>
-          <p className="mt-3 text-red-600 font-bold text-[11px] md:text-sm text-center">
-            Note: WhatsApp Group join karna mandatory hai.
-          </p>
+            {loading ? <Loader2 className="animate-spin h-5 w-5" /> : (
+              <>
+                <MiniWhatsAppLogo />
+                Join WhatsApp Group
+              </>
+            )}
+          </button>
+          <p className="mt-3 text-red-600 font-bold text-[11px] md:text-sm text-center">Note: WhatsApp Group join karna mandatory hai.</p>
         </div>
 
         <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-12 items-start">
-          {/* LEFT CONTENT */}
           <div>
             <div className="inline-flex items-center gap-2 bg-[#1a1a1a] border border-[#d4af37]/30 rounded-full px-4 py-1 text-sm font-semibold text-[#d4af37] mb-5">
-              <Sparkles className="h-4 w-4" />
-              Upgrade Option · Only ₹99 Today
+              <Sparkles className="h-4 w-4" /> Upgrade Option · Only ₹99 Today
             </div>
-
             <h1 className="text-3xl md:text-4xl font-bold leading-tight">
-              Ab paisa + success ko{' '}
-              <span className="text-[#d4af37]">fast-track</span> kijiye
+              Ab paisa + success ko <span className="text-[#d4af37]">fast-track</span> kijiye
             </h1>
-
             <p className="text-lg text-white/80 mt-4 max-w-2xl leading-relaxed">
               Aapka <span className="font-semibold text-white">Wristwatch Analysis unlock</span> ho gaya hai.
-              <br />
-              Ab next step hai{' '}
-              <span className="font-semibold text-white">paisa + clients + growth</span> ko boost karna — sirf{' '}
-              <span className="font-semibold text-[#d4af37]">₹99</span> mein.
+              <br />Ab next step hai <span className="font-semibold text-white">paisa + clients + growth</span> ko boost karna — sirf <span className="font-semibold text-[#d4af37]">₹99</span> mein.
             </p>
-
-            {/* Bundle UI */}
+            
             <div className="mt-10 bg-[#121212] rounded-2xl border border-white/10 p-4 sm:p-6">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Gift className="h-5 w-5 text-[#d4af37]" />
-                Aapko kya milega (5 Ebooks Bundle)
-              </h3>
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Gift className="h-5 w-5 text-[#d4af37]" /> Aapko kya milega (5 Ebooks Bundle)</h3>
               <div className="grid grid-cols-3 gap-3 sm:hidden">
                 {books.slice(0, 3).map((book, i) => (
                   <div key={i} className="bg-[#0b0b0b] border border-white/10 rounded-xl p-2 text-center">
@@ -131,70 +247,44 @@ export const OTOWatchPageGa = () => {
             </div>
           </div>
 
-          {/* RIGHT CHOICE BOX */}
+          {/* CHOICE BOX */}
           <div className="bg-white text-[#0b0b0b] rounded-3xl shadow-2xl p-6 md:p-8 sticky top-6">
             <p className="text-[10px] text-gray-500 text-center mb-1 uppercase tracking-widest font-bold">One last step</p>
             <h3 className="text-xl font-bold text-center mb-6 px-2">Choose Yes / No in this section</h3>
-            
             <div className="space-y-4">
-              {/* YES CHOICE */}
-              <label className={`flex items-center justify-between flex-wrap gap-2 border rounded-2xl p-3 md:p-4 cursor-pointer transition-all duration-300
-                ${choice === 'yes' ? 'border-[#d4af37] bg-[#fff9e6]' : 'border-gray-200'}`}>
+              <label className={`flex items-center justify-between flex-wrap gap-2 border rounded-2xl p-3 md:p-4 cursor-pointer transition-all duration-300 ${choice === 'yes' ? 'border-[#d4af37] bg-[#fff9e6]' : 'border-gray-200'}`}>
                 <div className="flex items-center gap-2 min-w-0">
                   <input type="radio" name="oto" checked={choice === 'yes'} onChange={() => setChoice('yes')} className="w-4 h-4 md:w-5 md:h-5 accent-[#d4af37] shrink-0" />
-                  <span className="font-bold text-black text-[13px] sm:text-sm md:text-base whitespace-nowrap">
-                    Haan, ₹99 Upgrade
-                  </span>
+                  <span className="font-bold text-black text-[13px] sm:text-sm md:text-base whitespace-nowrap">Haan, ₹99 Upgrade</span>
                 </div>
-                <span className="shrink-0 flex items-center gap-1 bg-green-600 text-white text-[10px] md:text-[11px] px-2 py-1 rounded-lg font-bold uppercase tracking-tighter">
-                  + <MiniWhatsAppLogo /> WhatsApp Group Join
-                </span>
+                <span className="shrink-0 flex items-center gap-1 bg-green-600 text-white text-[10px] md:text-[11px] px-2 py-1 rounded-lg font-bold uppercase tracking-tighter">+ <MiniWhatsAppLogo /> Join Group</span>
               </label>
-
-              {/* NO CHOICE */}
-              <label className={`flex items-center justify-between flex-wrap gap-2 border rounded-2xl p-3 md:p-4 cursor-pointer transition-all duration-300
-                ${choice === 'no' ? 'border-gray-400 bg-gray-50' : 'border-gray-200'}`}>
+              <label className={`flex items-center justify-between flex-wrap gap-2 border rounded-2xl p-3 md:p-4 cursor-pointer transition-all duration-300 ${choice === 'no' ? 'border-gray-400 bg-gray-50' : 'border-gray-200'}`}>
                 <div className="flex items-center gap-2 min-w-0">
                   <input type="radio" name="oto" checked={choice === 'no'} onChange={() => setChoice('no')} className="w-4 h-4 md:w-5 md:h-5 accent-gray-600 shrink-0" />
-                  <span className="font-bold text-gray-600 text-[13px] sm:text-sm md:text-base whitespace-nowrap">
-                    Nahi, Upgrade Skip
-                  </span>
+                  <span className="font-bold text-gray-600 text-[13px] sm:text-sm md:text-base whitespace-nowrap">Nahi, Upgrade Skip</span>
                 </div>
-                <span className="shrink-0 flex items-center gap-1 bg-green-600 text-white text-[10px] md:text-[11px] px-2 py-1 rounded-lg font-bold uppercase tracking-tighter">
-                  + <MiniWhatsAppLogo /> WhatsApp Group Join
-                </span>
+                <span className="shrink-0 flex items-center gap-1 bg-green-600 text-white text-[10px] md:text-[11px] px-2 py-1 rounded-lg font-bold uppercase tracking-tighter">+ <MiniWhatsAppLogo /> Join Group</span>
               </label>
             </div>
 
-            {/* DYNAMIC BUTTONS */}
-            {choice === 'no' ? (
-              <button
-                onClick={handleContinue}
-                className="mt-6 w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd5b] text-white font-bold text-lg py-4 rounded-full transition-all duration-300 shadow-lg active:scale-95"
-              >
-                <MiniWhatsAppLogo />
-                Join WhatsApp Group
-              </button>
-            ) : (
-              <button
-                disabled={!choice}
-                onClick={handleContinue}
-                className="mt-6 w-full flex items-center justify-center gap-2 bg-[#d4af37] hover:bg-[#c9a634] text-black font-bold text-lg py-4 rounded-full transition-all duration-300 disabled:opacity-40 shadow-lg active:scale-95"
-              >
-                Confirm & Continue
-                <ArrowRight className="h-5 w-5" />
-              </button>
-            )}
-
-            {/* RED BOLD MANDATORY NOTE */}
-            <p className="mt-4 text-center text-red-600 font-bold text-[11px] md:text-xs">
-              WhatsApp Group join karna mandatory hai.
-            </p>
-
-            {/* FOOTER INFO */}
+            <button
+              disabled={!choice || loading || razorpayLoading}
+              onClick={handleContinue}
+              className={`mt-6 w-full flex items-center justify-center gap-2 font-bold text-lg py-4 rounded-full transition-all duration-300 shadow-lg active:scale-95 disabled:opacity-40
+                ${choice === 'no' ? 'bg-[#25D366] text-white hover:bg-[#1ebd5b]' : 'bg-[#d4af37] text-black hover:bg-[#c9a634]'}`}
+            >
+              {(loading || razorpayLoading) ? <Loader2 className="animate-spin h-6 w-6" /> : (
+                <>
+                  {choice === 'no' && <MiniWhatsAppLogo />}
+                  {choice === 'no' ? 'Join WhatsApp Group' : 'Confirm & Continue'}
+                  {choice === 'yes' && <ArrowRight className="h-5 w-5" />}
+                </>
+              )}
+            </button>
+            <p className="mt-4 text-center text-red-600 font-bold text-[11px] md:text-xs">WhatsApp Group join karna mandatory hai.</p>
             <p className="text-[10px] md:text-xs text-gray-500 text-center mt-5 flex items-center justify-center gap-1.5 font-semibold">
-              <Clock className="h-3.5 w-3.5 text-gray-400" />
-              Payment ke baad ebooks WhatsApp / Email par share ki jaayengi
+              <Clock className="h-3.5 w-3.5 text-gray-400" /> Ebooks WhatsApp / Email par share ki jaayengi
             </p>
           </div>
         </div>

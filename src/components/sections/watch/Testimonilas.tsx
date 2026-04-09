@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { useRef, useState } from "react";
+import SubscribeButton from '../../SubscribeButton';
 
 const testimonials = [
   { name: "Anita Kapoor", text: "Pehli baar naam numerology ke baare mein suna, lekin webinar ke baad sab clear ho gaya." },
@@ -121,14 +122,17 @@ export const TestimonialsSection = () => {
           Transformed 2 Million Lives
         </p>
 
-        <button
-          onClick={() =>
-            document.getElementById("register")?.scrollIntoView({ behavior: "smooth" })
-          }
-          className="bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold px-6 py-3 rounded-xl text-sm sm:text-base transition"
-        >
-          FREE Wristwatch Workshop
-        </button>
+        <div className="flex justify-center">
+          <SubscribeButton
+            href="#register"
+            ctaLocation="testimonials_section"
+            onClick={() =>
+              document.getElementById("register")?.scrollIntoView({ behavior: "smooth" })
+            }
+            label="FREE Wristwatch Workshop"
+            className="bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold px-6 py-3 rounded-xl text-sm sm:text-base transition flex items-center justify-center"
+          />
+        </div>
       </div>
 
     </section>

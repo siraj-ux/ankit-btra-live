@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { useFacebookPixel } from "@/hooks/usePIxelWatch";
+// import { useFacebookPixel } from "@/hooks/usePIxelWatch";
 import { HeroSectionWatch } from '@/components/sections/watch/HeroWatch';
 import { WhatisSection } from '@/components/sections/watch/WhatIsSection';
 import { EnergyConnectionSection } from '@/components/sections/watch/EnergyConnection';
@@ -14,8 +14,6 @@ import { StickyMobileCTA } from '@/components/sections/watch/StickyCta';
 
 const Watch = () => {
   const heroRef = useRef<HTMLDivElement>(null);
-
-useFacebookPixel()
 
  useEffect(() => {
     document.title = "Wristwatch Workshop | Ankiit Btra ";

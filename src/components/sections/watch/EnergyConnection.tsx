@@ -1,4 +1,5 @@
-import { Heart, Coins, Shield, ArrowDown } from "lucide-react";
+import { Heart, Coins, Shield } from "lucide-react";
+import SubscribeButton from './SubscribeButton'; // Import the SubscribeButton
 
 export const EnergyConnectionSection = () => {
   const scrollToRegister = () => {
@@ -9,11 +10,11 @@ export const EnergyConnectionSection = () => {
   };
 
   return (
-    <section className="py-6 md:py-8 bg-[#F5F5F5]">
+    <section className="py-6 md:py-16 bg-[#F5F5F5]">
       <div className="container mx-auto px-4">
 
         {/* HEADER */}
-        <div className="text-left md:text-center max-w-4xl mx-auto mb-8">
+        <div className="text-left md:text-center max-w-4xl mx-auto mb-12">
           <h2 className="text-2xl md:text-4xl font-extrabold text-black leading-tight">
             Love, Health, Wealth… Sabka Connection Aapki <br />
             <span className="text-black">Watch Ki Energy Se Hoti Hai.</span>
@@ -28,7 +29,6 @@ export const EnergyConnectionSection = () => {
 
         {/* CARDS */}
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-16">
-
           <InfoCard
             icon={<Heart className="h-7 w-7 text-red-500" />}
             title="Love & Relationships"
@@ -46,7 +46,6 @@ export const EnergyConnectionSection = () => {
             title="Health & Peace"
             description="Strap + dial combo = direct impact on mood & stability."
           />
-
         </div>
 
         {/* CTA BOX */}
@@ -56,13 +55,29 @@ export const EnergyConnectionSection = () => {
             kaunsi watch aapki growth, clarity & breakthroughs ko support karegi.
           </p>
 
-          <button
-            onClick={scrollToRegister}
-            className="inline-flex items-center gap-2 bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold px-10 py-4 rounded-xl text-lg transition"
-          >
-            FREE Wristwatch Workshop
-            
-          </button>
+          {/* UPDATED SUBSCRIBE BUTTON */}
+          <div className="flex justify-center">
+            <SubscribeButton
+              href="#register"
+              ctaLocation="energy_connection_section"
+              onClick={scrollToRegister}
+              label="FREE Wristwatch Workshop →"
+              className="
+                w-full md:w-auto
+                bg-[#FEA116]
+                hover:bg-[#e89214]
+                text-white
+                font-bold
+                py-4 px-10
+                rounded-xl
+                text-lg
+                transition-all
+                duration-300
+                shadow-lg
+                flex items-center justify-center gap-2
+              "
+            />
+          </div>
         </div>
 
       </div>
@@ -70,8 +85,7 @@ export const EnergyConnectionSection = () => {
   );
 };
 
-/* ---------- Updated Card (Icon Left, Text Right) ---------- */
-
+/* ---------- Card Component ---------- */
 const InfoCard = ({
   icon,
   title,
@@ -81,14 +95,11 @@ const InfoCard = ({
   title: string;
   description: string;
 }) => (
-  <div className="bg-gray-50 rounded-2xl p-5 shadow-sm">
+  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
     <div className="flex items-start gap-4">
-      {/* Icon */}
       <div className="flex-shrink-0">
         {icon}
       </div>
-
-      {/* Text */}
       <div>
         <h3 className="font-bold text-lg text-black mb-1">
           {title}

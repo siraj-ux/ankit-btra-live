@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import SubscribeButton from '../../SubscribeButton';
 
 export const FinalCTA = () => {
   return (
@@ -23,7 +23,13 @@ export const FinalCTA = () => {
             {/* CTA + Trust (responsive alignment) */}
             <div className="flex flex-col items-start md:items-center md:text-center">
 
-              <Button
+              <SubscribeButton
+                href="#register"
+                ctaLocation="final_cta_section"
+                onClick={() =>
+                  document.getElementById("register")?.scrollIntoView({ behavior: "smooth" })
+                }
+                label="FREE Wristwatch Workshop"
                 className="
                   bg-[#F4C063]
                   hover:bg-[#eab14f]
@@ -34,10 +40,9 @@ export const FinalCTA = () => {
                   rounded-xl
                   text-sm
                   transition
+                  flex items-center justify-center
                 "
-              >
-                FREE Wristwatch Workshop
-              </Button>
+              />
 
               {/* Trust note */}
               <div className="flex items-center gap-2 mt-4 text-xs text-[#F4C063] text-center">

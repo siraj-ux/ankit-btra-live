@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Calendar, Clock, Globe, Video } from "lucide-react";
-
-/* 🔗 APPS SCRIPT URL */
-const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycby6O9cD_HsMp9Ws8QJmI2UtvCAmY1uyTDa7wgBfCnEJtSNH-L0GOoTiFMonqlcQZjxu/exec";
+import SubscribeButton from "../../SubscribeButton";
+import { GA_PRODUCT2, WEBINAR_NAME_2 } from "@/utils/product-info";
+import { getUTMParams, trackAddToCart, trackLead } from "@/utils/gtm";
 
 /* 🔗 DATE & TIME CSV */
 const DATE_TIME_CSV =
@@ -22,9 +21,6 @@ export const HeroSectionWatchGa = () => {
   const [eventDate, setEventDate] = useState("Loading...");
   const [eventTime, setEventTime] = useState("Loading...");
 
-  /* =====================
-     FETCH DATE & TIME
-  ===================== */
   useEffect(() => {
     fetch(DATE_TIME_CSV)
       .then((res) => res.text())
@@ -42,27 +38,18 @@ export const HeroSectionWatchGa = () => {
       });
   }, []);
 
-  /* =====================
-     INPUT HANDLER
-  ===================== */
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  /* =====================
-     VALIDATIONS
-  ===================== */
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const isValidPhone = (phone: string) =>
     /^[0-9]{10}$/.test(phone);
 
-  /* =====================
-     SUBMIT HANDLER
-  ===================== */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -89,61 +76,51 @@ export const HeroSectionWatchGa = () => {
 
     try {
       setLoading(true);
+      trackLead(GA_PRODUCT2, form)
+      const transactionId = `${Date.now()}-${form.name.slice(0,5)}`;
 
-      const body = new URLSearchParams({
-        ...form,
-        utm_source: "facebook",
-        utm_campaign: "wristwatch_workshop",
-        utm_term: "",
-        utm_content: "",
-      });
+      // 1. SAVE DATA TO SESSION STORAGE AS BACKUP
+      const userData = {
+        transaction_id: transactionId,
+        full_name: form.name,
+        email: form.email,
+        phone: form.phone,
+        profession: form.profession,
+        age_range: form.age_range,
+        workshop : `${WEBINAR_NAME_2} GA`,
+      };
+      sessionStorage.setItem("user_details", JSON.stringify(userData));
 
-      await fetch(SCRIPT_URL, {
-        method: "POST",
-        body,
-      });
-
-      
-
-      setForm({
-        name: "",
-        email: "",
-        phone: "",
-        age_range: "",
-        profession: "",
-      });
-
+      // 2. CONSTRUCT QUERY PARAMS AND REDIRECT
+      // Note: Data is NOT sent to Apps Script from here. 
+      // It is passed to OTO page which handles the submission.
       const query = new URLSearchParams({
-  full_name: form.name,
-  email: form.email,
-  phone: form.phone,
-}).toString();
+        ...getUTMParams(),
+        transaction_id: transactionId,
+      }).toString();
 
-window.location.href = `/oto-watch-ga?${query}`;
-    } catch {
-      alert("❌ Submission failed. Please try again.");
+      trackAddToCart(GA_PRODUCT2)
+      window.location.href = `/oto-watch-ga?${query}`;
+      
+    } catch (error) {
+      console.error("Redirection error", error);
+      alert("❌ Something went wrong. Please try again.");
     } finally {
-      setLoading(false);
+      // setLoading(false); // Commented out because the page is redirecting
     }
   };
 
   return (
     <section className="relative min-h-screen bg-black text-white flex items-center overflow-hidden">
-
-      {/* 🔮 BACKGROUND SVG */}
       <div
         className="absolute inset-0 bg-no-repeat bg-center bg-cover opacity-10 pointer-events-none"
         style={{ backgroundImage: "url('/horoscope.svg')" }}
         aria-hidden="true"
       />
 
-      {/* CONTENT */}
       <div className="relative z-10 container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-2 gap-10 items-start">
-
-          {/* LEFT SIDE */}
           <div className="space-y-8">
-
             <div className="text-left md:text-center">
               <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
                 WAQT WAQT KI BAAT HAI!!!
@@ -161,12 +138,8 @@ window.location.href = `/oto-watch-ga?${query}`;
                 className="w-full h-[300px] object-contain"
               />
               <div className="text-center">
-                <h3 className="text-xl font-bold text-yellow-400">
-                  Ankiit Btra
-                </h3>
-                <p className="text-sm text-white/70 font-bold">
-                  Energy • Identity • Alignment
-                </p>
+                <h3 className="text-xl font-bold text-yellow-400">Ankiit Btra</h3>
+                <p className="text-sm text-white/70 font-bold">Energy • Identity • Alignment</p>
               </div>
             </div>
 
@@ -178,65 +151,59 @@ window.location.href = `/oto-watch-ga?${query}`;
             </div>
           </div>
 
-          {/* RIGHT SIDE — FORM */}
           <div className="flex flex-col items-center">
-
-            <div
-              className="bg-white rounded-2xl p-6 md:p-8 shadow-2xl max-w-md w-full text-black"
-              id="register"
-            >
-              <h3 className="text-2xl font-bold text-center mb-6">
-                Fill Your Details
-              </h3>
+            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-2xl max-w-md w-full text-black" id="register">
+              <h3 className="text-2xl font-bold text-center mb-6">Fill Your Details</h3>
 
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <Input label="Full Name *" name="name" value={form.name} onChange={handleChange} />
-                <Input label="Email Address *" name="email" value={form.email} onChange={handleChange} />
-                <Input label="Phone Number *" name="phone" value={form.phone} onChange={handleChange} />
+                <Input label="Email Address *" name="email" type="email" value={form.email} onChange={handleChange} />
+                <Input label="Phone Number *" name="phone" type="tel" value={form.phone} onChange={handleChange} />
 
                 <Select label="Age *" name="age_range" value={form.age_range} onChange={handleChange}>
                   <option value="">Select Age Range</option>
-                  <option>Below 18</option>
-                  <option>18-24</option>
-                  <option>25–34</option>
-                  <option>35–44</option>
-                  <option>45 & Above</option>
+                  <option value="below_18">Below 18</option>
+                  <option value="18_24">18-24</option>
+                  <option value="25_34">25–34</option>
+                  <option value="35_44">35–44</option>
+                  <option value="45_above">45 & Above</option>
                 </Select>
 
                 <Select label="Profession *" name="profession" value={form.profession} onChange={handleChange}>
                   <option value="">Select Profession</option>
-                  <option>Business Owner / Entrepreneur</option>
-                  <option>Working Professional (Job)</option>
-                  <option>Student</option>
-                  <option>Freelancer / Self-Employed</option>
-                  <option>Homemaker</option>
+                  <option value="business_owner">Business Owner / Entrepreneur</option>
+                  <option value="working_professional">Working Professional (Job)</option>
+                  <option value="student">Student</option>
+                  <option value="freelancer">Freelancer / Self-Employed</option>
+                  <option value="homemaker">Homemaker</option>
                 </Select>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full mt-4 bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold py-4 rounded-xl text-lg transition disabled:opacity-60"
-                >
-                  {loading ? "Submitting..." : "FREE Wristwatch Workshop"}
-                </button>
+                <SubscribeButton
+                  label={loading ? "Redirecting..." : "FREE Wristwatch Workshop"}
+                  ctaLocation="hero_section_watch_ga"
+                  onClick={() => {
+                    if (!loading) {
+                      const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+                      handleSubmit(fakeEvent);
+                    }
+                  }}
+                  className={`w-full mt-4 bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold py-4 rounded-xl text-lg transition flex items-center justify-center ${
+                    loading ? "opacity-60 pointer-events-none" : ""
+                  }`}
+                />
               </form>
             </div>
-
+            
             <div className="max-w-md text-left mt-6 space-y-4">
               <p className="text-sm text-white leading-relaxed font-bold">
-                Decode the hidden energy behind your wristwatch with India’s ONLY
-                Trusted Numerologist —{" "}
-                <span className="text-yellow-400 font-semibold">
-                  Ankiit Btra
-                </span>.
+                Decode the hidden energy behind your wristwatch with India’s ONLY Trusted Numerologist —{" "}
+                <span className="text-yellow-400 font-semibold">Ankiit Btra</span>.
               </p>
-
               <div className="flex justify-center gap-6 text-xs font-semibold text-white/70">
                 <span>⏳ Limited Slots</span>
                 <span>🔥 High Demand</span>
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -245,16 +212,7 @@ window.location.href = `/oto-watch-ga?${query}`;
 };
 
 /* ---------- Reusable Components ---------- */
-
-const Detail = ({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) => (
+const Detail = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string; }) => (
   <div className="flex items-center gap-3 bg-[#111] rounded-xl p-3 border border-white">
     <div className="text-yellow-400">{icon}</div>
     <div>
@@ -264,21 +222,11 @@ const Detail = ({
   </div>
 );
 
-const Input = ({
-  label,
-  name,
-  value,
-  onChange,
-}: {
-  label: string;
-  name: string;
-  value: string;
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
-}) => (
+const Input = ({ label, name, value, onChange, type }: { label: string; name: string; value: string; onChange: React.ChangeEventHandler<HTMLInputElement>; type?: string; }) => (
   <div>
     <label className="text-sm font-semibold">{label}</label>
     <input
-      type="text"
+      type={type || "text"}
       name={name}
       value={value}
       onChange={onChange}
@@ -287,19 +235,7 @@ const Input = ({
   </div>
 );
 
-const Select = ({
-  label,
-  name,
-  value,
-  onChange,
-  children,
-}: {
-  label: string;
-  name: string;
-  value: string;
-  onChange: React.ChangeEventHandler<HTMLSelectElement>;
-  children: React.ReactNode;
-}) => (
+const Select = ({ label, name, value, onChange, children }: { label: string; name: string; value: string; onChange: React.ChangeEventHandler<HTMLSelectElement>; children: React.ReactNode; }) => (
   <div>
     <label className="text-sm font-semibold">{label}</label>
     <select

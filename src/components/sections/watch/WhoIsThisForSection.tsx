@@ -1,3 +1,5 @@
+import SubscribeButton from '../../SubscribeButton';
+
 export const WhoIsThisForSection = () => {
   const scrollToRegister = () => {
     const el = document.getElementById("register");
@@ -51,13 +53,14 @@ export const WhoIsThisForSection = () => {
         </div>
 
         {/* CTA */}
-        <div className="max-w-4xl mx-auto text-center">
-          <button
+        <div className="max-w-4xl mx-auto flex justify-center text-center">
+          <SubscribeButton
+            href="#register"
+            ctaLocation="who_is_this_for_section"
             onClick={scrollToRegister}
-            className="bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold px-6 py-3 rounded-xl text-base transition"
-          >
-            FREE Wristwatch Workshop
-          </button>
+            label="FREE Wristwatch Workshop"
+            className="bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold px-6 py-3 rounded-xl text-base transition flex items-center justify-center"
+          />
         </div>
 
       </div>

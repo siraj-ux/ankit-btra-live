@@ -1,6 +1,7 @@
 import { CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import SubscribeButton from "@/components/SubscribeButton";
+import {  DISCOUNTED_PRICE, OTO_OG_PRICE, OTO_DISCOUNTED_PRICE } from '@/utils/product-info';
+
 const audiences = [
   "You're a Business Owner struggling with unstable revenue",
   "You're a Parent who wants to give your child a successful future",
@@ -17,12 +18,15 @@ export const WhoIsThisForSection = ({ onCTAClick }: WhoIsThisForSectionProps) =>
     <section className="py-16 md:py-24 bg-background">
       <div className="container">
         <div className="max-w-3xl mx-auto">
+          
+          {/* Heading */}
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-philosopher font-bold text-foreground mb-4">
               This Workshop Is Perfect For You If...
             </h2>
           </div>
-          
+
+          {/* List */}
           <div className="space-y-4 mb-10">
             {audiences.map((item, index) => (
               <div
@@ -34,14 +38,30 @@ export const WhoIsThisForSection = ({ onCTAClick }: WhoIsThisForSectionProps) =>
               </div>
             ))}
           </div>
-          
+
+          {/* CTA */}
           <div className="text-center">
-            <Link to="/oto-fb">
-            <Button variant="gold" size="xl" >
-              Book Now @ ₹99
-            </Button>
-            </Link>
+            <SubscribeButton
+              href="/oto-fb"
+              ctaLocation="who_is_this_for"
+              onClick={onCTAClick}
+              className="
+                bg-[#FEA116]
+                hover:bg-[#FEA116]
+                text-white
+                font-bold
+                py-4 px-10
+                rounded-xl
+                text-lg
+                transition-all
+                duration-300
+                shadow-lg
+                inline-block
+              "
+              label={`Book Now @ ₹${DISCOUNTED_PRICE}`}
+            />
           </div>
+
         </div>
       </div>
     </section>

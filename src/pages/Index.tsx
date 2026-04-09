@@ -16,7 +16,7 @@ import { useFacebookPixel } from "@/hooks/useFacebookPixelHome";
 const Index = () => {
   const heroRef = useRef<HTMLDivElement>(null);
 
-useFacebookPixel()
+// useFacebookPixel()
 
 
 

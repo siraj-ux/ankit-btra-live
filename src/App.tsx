@@ -22,44 +22,58 @@ import WatchGa from "./pages/watch-pages/WatchGa";
 import { ThankuWatchGa } from "./pages/watch-pages/ThankuWatchGa";
 import { OTOWatchPageGa } from "./pages/watch-pages/OTOWatchPageGa"; 
 import { OTOThankYouPageGa } from "./pages/watch-pages/OTOThankYouPageGa"; 
+import { usePageViewGTM } from "./hooks/use-pageview-gtm";
 
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index/>} />
-          <Route path="/oto-fb" element={<OtoPage/>}/>
-          <Route path="/ty-fb" element={<ThankYouPage/>}/>
-          <Route path="/ty-oto-fb" element={<ThankYouPageOtoFb/>}/>
-          <Route path="/ga" element={<IndexGa/>}/>
-           <Route path="/ty-ga" element={<ThankYouPageGa/>}/>
-          <Route path="/oto-ga" element={<OtoPageGa/>}/>
-          <Route path="/ty-oto-ga" element={<ThankYouPageOtoGa/>} />
 
-          {/* oto watch */}
-          <Route path="/watch-fb" element={<Watch/>}/>
-          <Route path="/watch-fb-ty" element={<ThankYouPageWatch/>}/>
-          <Route path="/oto-watch-fb" element={<OTOWatchPage/>}/>
-          <Route path="/oto-watch-fb-ty" element={<OTOThankYouPage/>}/>
-          
+const AppRoutes = () => {
+  usePageViewGTM(); // ← hook goes here
 
-          <Route path="/watch-ga" element={<WatchGa/>}/>
-          <Route path="/watch-ga-ty" element={<ThankuWatchGa/>}/>
-          <Route path="/oto-watch-ga" element={<OTOWatchPageGa/>}/>
-          <Route path="/oto-watch-ga-ty" element={<OTOThankYouPageGa/>}/>
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+  return (
+    <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/oto-fb" element={<OtoPage />} />
+            <Route path="/ty-fb" element={<ThankYouPage />} />
+            <Route path="/ty-oto-fb" element={<ThankYouPageOtoFb />} />
+
+            <Route path="/ga" element={<IndexGa />} />
+            <Route path="/ty-ga" element={<ThankYouPageGa />} />
+            <Route path="/oto-ga" element={<OtoPageGa />} />
+            <Route path="/ty-oto-ga" element={<ThankYouPageOtoGa />} />
+
+            {/* watch */}
+            <Route path="/watch-fb" element={<Watch />} />
+            <Route path="/watch-fb-ty" element={<ThankYouPageWatch />} />
+            <Route path="/oto-watch-fb" element={<OTOWatchPage />} />
+            <Route path="/oto-watch-fb-ty" element={<OTOThankYouPage />} />
+
+            <Route path="/watch-ga" element={<WatchGa />} />
+            <Route path="/watch-ga-ty" element={<ThankuWatchGa />} />
+            <Route path="/oto-watch-ga" element={<OTOWatchPageGa />} />
+            <Route path="/oto-watch-ga-ty" element={<OTOThankYouPageGa />} />
+
+            <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+  );
+};
+
+
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

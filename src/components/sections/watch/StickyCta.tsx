@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import SubscribeButton from '../../SubscribeButton';
 import { CountdownTimer } from "../../CountdownTimer";
 
 interface StickyMobileCTAProps {
@@ -33,14 +33,13 @@ export const StickyMobileCTA = ({ onCTAClick }: StickyMobileCTAProps) => {
         </div>
 
         {/* CTA */}
-        <Button
-          variant="gold"
-          size="lg"
+        <SubscribeButton
+          href="#register"
+          ctaLocation="sticky_mobile_cta"
           onClick={scrollToRegister}
-          className="px-4 py-3 text-xs font-extrabold whitespace-nowrap"
-        >
-          Free Wristwatch Workshop
-        </Button>
+          label="Free Wristwatch Workshop"
+          className="bg-[#F4C063] hover:bg-[#eab14f] text-black rounded-lg px-4 py-3 text-xs font-extrabold whitespace-nowrap transition flex items-center justify-center"
+        />
       </div>
 
     </div>

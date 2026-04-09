@@ -4,10 +4,14 @@ import { Input } from "@/components/ui/input";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { User, Mail, Phone, MapPin, Loader2, Calendar, Users } from "lucide-react";
 import { useUTMParams, buildRazorpayURL } from "@/hooks/useUTMParams";
-import { useFacebookPixel } from "@/hooks/useFacebookPixel";
+// import { useFacebookPixel } from "@/hooks/useFacebookPixel";
+import { trackAddToCart, trackFormSubmit } from "@/utils/gtm";
+import { GA_PRODUCT1, GA_PRODUCT1_OTO, RAZORPAY_DESCRIPTION, WEBINAR_NAME_1 } from "@/utils/product-info";
+import { useRazorpay } from "@/hooks/useRazorpay";
+import { toast } from "@/components/ui/sonner";
 
-const RAZORPAY_99_URL = "https://pages.razorpay.com/pl_S6ZxgWS0ZZvgE2/view";
-const RAZORPAY_499_URL = "https://pages.razorpay.com/pl_S6aRnHuQsmGTB4/view";
+// const RAZORPAY_99_URL = "https://pages.razorpay.com/pl_S6ZxgWS0ZZvgE2/view";
+// const RAZORPAY_499_URL = "https://pages.razorpay.com/pl_S6aRnHuQsmGTB4/view";
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNqQghsxa10pLaJKRryPO0fs0-02M4diS9pJ2RwZVisD0KeN5q97BZehzijb1LBKLlRQ/exec";
 
@@ -50,24 +54,24 @@ export default function OtoPage() {
     gender: "",
     courseName: "Name Numerology NNW Workshop - FB1",
   });
-
+  const {initiatePayment, loading, error} = useRazorpay();
   const [errors, setErrors] = useState<FormErrors>({});
 
-  useFacebookPixel(
-    fireAddToCart
-      ? {
-          eventName: "AddToCart",
-          eventParams: {
-            content_name: "LP2_Product",
-            content_category: upgrade499 ? "LP2_Offer_499" : "LP2_Offer_99",
-            content_ids: [upgrade499 ? "LP2_IN_499" : "LP2_IN_99"],
-            content_type: "product",
-            value: upgrade499 ? 499 : 99,
-            currency: "INR",
-          },
-        }
-      : undefined
-  );
+  // useFacebookPixel(
+  //   fireAddToCart
+  //     ? {
+  //         eventName: "AddToCart",
+  //         eventParams: {
+  //           content_name: "LP2_Product",
+  //           content_category: upgrade499 ? "LP2_Offer_499" : "LP2_Offer_99",
+  //           content_ids: [upgrade499 ? "LP2_IN_499" : "LP2_IN_99"],
+  //           content_type: "product",
+  //           value: upgrade499 ? 499 : 99,
+  //           currency: "INR",
+  //         },
+  //       }
+  //     : undefined
+  // );
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -117,30 +121,82 @@ export default function OtoPage() {
     }
   };
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
+
+    trackFormSubmit({
+          formData: {
+            ...formData,
+          }, formName: "OTO Form GA"
+          
+        });
 
     setIsSubmitting(true);
     setFireAddToCart(true);
 
     await sendToGoogleSheets();
 
-    let razorpayURL = buildRazorpayURL(
-      upgrade499 ? RAZORPAY_499_URL : RAZORPAY_99_URL,
-      formData,
-      utmParams
-    );
+    const product = upgrade499 ? GA_PRODUCT1_OTO : GA_PRODUCT1 ;// Using OTO product for both since price is dynamic
+    const workshopName = upgrade499 ? `${WEBINAR_NAME_1} GA + 5 Year Destiny Report` : `${WEBINAR_NAME_1} GA`;
+    trackAddToCart(product)
+        // Trigger Razorpay Popup
+    const result = await initiatePayment({
+        amount: product.price,
+        productName: `Ankit Batra's Numerology Workshop`,
+        description: `${RAZORPAY_DESCRIPTION} from GA Page`,
+        prefill: {
+          name: formData.name,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        notes: {
+          ...formData,
+          ...utmParams,
+          page_url: window.location.href,
+          workshop: workshopName,
+        }
+      });
 
-    const sep = razorpayURL.includes("?") ? "&" : "?";
-    razorpayURL += `${sep}course_name=${encodeURIComponent(formData.courseName)}`;
+      if (result.status === "success") {
+      // ✅ SUCCESS REDIRECT LOGIC
+      const successParams = new URLSearchParams({
+        payment_id: result.paymentId || "",
+        ...utmParams as any
+      });
 
-    if (upgrade499) {
-      if (formData.dob) razorpayURL += `&dob=${encodeURIComponent(formData.dob)}`;
-      if (formData.gender) razorpayURL += `&gender=${encodeURIComponent(formData.gender)}`;
+      // Redirect to specific page based on price
+      if (upgrade499) {
+        window.location.href = `/ty-oto-ga?${successParams.toString()}`;
+      } else {
+        window.location.href = `/ty-ga?${successParams.toString()}`;
+      }
+      
+    } else {
+      // Handle Failure or Cancel
+      if (result.error !== "Payment cancelled by user") {
+        toast.error(result.error || "Payment failed");
+      }
+      setIsSubmitting(false);
     }
 
-    window.location.href = razorpayURL;
+    // let razorpayURL = buildRazorpayURL(
+    //   upgrade499 ? RAZORPAY_499_URL : RAZORPAY_99_URL,
+    //   formData,
+    //   utmParams
+    // );
+
+    // const sep = razorpayURL.includes("?") ? "&" : "?";
+    // razorpayURL += `${sep}course_name=${encodeURIComponent(formData.courseName)}`;
+
+    // if (upgrade499) {
+    //   if (formData.dob) razorpayURL += `&dob=${encodeURIComponent(formData.dob)}`;
+    //   if (formData.gender) razorpayURL += `&gender=${encodeURIComponent(formData.gender)}`;
+    // }
+
+    // window.location.href = razorpayURL;
   };
 
   const handleChange = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,10 +226,10 @@ export default function OtoPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Main Contact Fields */}
           {[
-            { key: "name", icon: User, label: "Full Name", placeholder: "e.g. John Doe" },
-            { key: "email", icon: Mail, label: "Email Address", placeholder: "john@example.com", type: "email" },
-            { key: "phone", icon: Phone, label: "Phone Number", placeholder: "10-digit mobile number" },
-            { key: "city", icon: MapPin, label: "City", placeholder: "Your current city" },
+            { key: "name", icon: User, label: "Full Name", placeholder: "e.g. John Doe", name: "name" },
+            { key: "email", icon: Mail, label: "Email Address", placeholder: "john@example.com", type: "email", name:"email" },
+            { key: "phone", icon: Phone, label: "Phone Number", placeholder: "10-digit mobile number", type: "tel", name: "phone number" },
+            { key: "city", icon: MapPin, label: "City", placeholder: "Your current city", type: "text", name: "city"},
           ].map(({ key, icon: Icon, label, placeholder, type }) => (
             <div key={key} className="space-y-1">
               <label className="text-xs font-semibold text-gray-600 ml-1">{label}</label>

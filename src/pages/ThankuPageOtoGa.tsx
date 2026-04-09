@@ -1,8 +1,37 @@
 import { CheckCircle, ArrowRight, MessageCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFacebookPixel } from "@/hooks/useFacebookPixel";
+import { trackPurchase } from '@/utils/gtm';
+import { GA_ORDER, GA_PRODUCT1_OTO, OTO_OG_PRICE } from '@/utils/product-info';
+import { useEffect } from 'react';
+
 
 export const ThankYouPageOtoGa = () => {
+
+    /* ✅ GTM PURCHASE TRACKING (Value: 499) */
+    useEffect(() => {
+      // 1. Get payment ID from URL
+      const params = new URLSearchParams(window.location.search);
+      const paymentId = params.get("payment_id") || params.get("razorpay_payment_id");
+  
+      if (paymentId) {
+        // 2. Refresh Protection
+        const alreadyTracked = localStorage.getItem(`tracked_${paymentId}`);
+        if (alreadyTracked) return;
+        
+        localStorage.setItem(`tracked_${paymentId}`, "true");
+      }
+  
+      // 3. Fire GTM Event (Specifically for the 499 OTO)
+      trackPurchase({
+            ...GA_ORDER,
+            value: OTO_OG_PRICE,
+            items: [
+              {...GA_PRODUCT1_OTO}
+            ],
+        transaction_id: paymentId || `txn_oto_${Date.now()}`,
+      });
+    }, []);
   return (
     <section className="min-h-screen bg-[#04343b] flex items-center justify-center px-4">
       <div className="max-w-xl w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center">

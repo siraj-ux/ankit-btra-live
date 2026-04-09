@@ -1,9 +1,13 @@
 import { CheckCircle, ArrowRight, MessageCircle, Calendar, Clock } from "lucide-react";
+import { useRef, useEffect } from 'react';
 
 const WHATSAPP_LINK = "https://hi.switchy.io/hiswitchywatch";
 
 export const ThankYouPageWatch = () => {
     
+  useEffect(() => {
+    document.title = "Wristwatch Workshop | Ankiit Btra ";
+  }, []);
   return (
     <section className="min-h-screen bg-black text-white flex items-center justify-center px-4">
 

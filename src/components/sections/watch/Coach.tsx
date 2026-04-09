@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import SubscribeButton from '../../SubscribeButton';
 
 /* 🔁 ADD / REMOVE LOGOS HERE */
 const logos = [
@@ -54,16 +55,17 @@ export const Coach = () => {
             </ul>
 
             {/* CTA */}
-            <button
+            <SubscribeButton
+              href="#register"
+              ctaLocation="coach_section"
               onClick={() =>
                 document.getElementById("register")?.scrollIntoView({
                   behavior: "smooth",
                 })
               }
-              className="mt-6 inline-flex bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold px-8 py-4 rounded-xl text-lg transition"
-            >
-              FREE Wristwatch Workshop
-            </button>
+              label="FREE Wristwatch Workshop"
+              className="mt-6 inline-flex bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold px-8 py-4 rounded-xl text-lg transition items-center justify-center"
+            />
           </div>
 
           {/* RIGHT — IMAGE + LOGO MARQUEE */}

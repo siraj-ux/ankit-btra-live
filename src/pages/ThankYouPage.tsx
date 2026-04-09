@@ -2,23 +2,53 @@ import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { useFacebookPixel } from "@/hooks/useFacebookPixel";
-
+import { trackPurchase } from "@/utils/gtm";
+import { DISCOUNTED_PRICE, ORDER, OTO_OG_PRICE, PRODUCT1, PRODUCT1_OTO } from "@/utils/product-info";
 
 export const ThankYouPage = () => {
-    useFacebookPixel({
-    eventName: "Purchase NNW",
-    eventParams: {
-      content_name: "LP2_Product",
-      content_category: "LP2_Offer",
-      content_ids: ["LP2_IN_99"],
-      content_type: "product",
-      value: 99,
-      currency: "INR",
-    },
-  });
+  /* 🔥 FACEBOOK PIXEL TRACKING */
+  
+
+    // useFacebookPixel({
+    //   eventName: "Purchase NNW",
+    //   eventParams: {
+    //     content_name: "LP2_Product",
+    //     content_category: "LP2_Offer",
+    //     content_ids: ["LP2_IN_99"],
+    //     content_type: "product",
+    //     value: 99,
+    //     currency: "INR",
+    //   },
+    // });
+
+  /* ✅ GTM PURCHASE TRACKING (With Refresh Protection) */
+  useEffect(() => {
+    // 1. Get payment ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get("payment_id") || params.get("razorpay_payment_id");
+
+    if (paymentId) {
+      // 2. Prevent duplicate tracking on page refresh
+      const alreadyTracked = localStorage.getItem(`tracked_${paymentId}`);
+      if (alreadyTracked) return;
+      
+      localStorage.setItem(`tracked_${paymentId}`, "true");
+    }
+
+    // 3. Fire GTM Purchase Event
+    trackPurchase({
+      ...ORDER,
+      value: DISCOUNTED_PRICE,
+      items: [
+        {...PRODUCT1}
+      ],
+      transaction_id: paymentId || `txn_${Date.now()}`,
+    });
+  }, []);
+
   return (
     <section className="min-h-screen bg-[#04343b] flex items-center justify-center px-4">
-      <div className="max-w-xl w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center">
+      <div className="max-w-xl w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center animate-in fade-in zoom-in duration-500">
 
         {/* Success Icon */}
         <div className="flex justify-center mb-4">
@@ -28,7 +58,7 @@ export const ThankYouPage = () => {
         </div>
 
         {/* Heading */}
-        <h1 className="text-3xl md:text-4xl font-philosopher font-bold text-[#04343b] mb-2">
+        <h1 className="text-3xl md:text-4xl font-bold text-[#04343b] mb-2 leading-tight">
           You’re Successfully Registered 🎉
         </h1>
 
@@ -37,7 +67,7 @@ export const ThankYouPage = () => {
         </p>
 
         {/* Important Notice */}
-        <div className="bg-[#04343b]/5 border border-[#04343b]/10 rounded-xl p-4 mb-6">
+        <div className="bg-[#04343b]/5 border border-[#04343b]/10 rounded-xl p-5 mb-6 text-left">
           <p className="text-sm text-gray-700 leading-relaxed">
             ⚠️ <strong>IMPORTANT:</strong> All workshop links, reminders,
             bonuses & live session access will be shared only on our
@@ -50,27 +80,30 @@ export const ThankYouPage = () => {
           href="https://hi.switchy.io/hiswitchynamennw"
           target="_blank"
           rel="noopener noreferrer"
-          className="block"
+          className="block group"
         >
           <Button
-            size="xl"
+            size="lg"
             className="
-              w-full
+              w-full h-14
               bg-green-500 hover:bg-green-600
               text-white
               font-bold
+              text-lg
               rounded-xl
               flex items-center justify-center gap-2
               shadow-lg
+              transition-all
+              group-hover:scale-[1.02]
             "
           >
             Join WhatsApp Group Now
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-5 w-5 animate-bounce-x" />
           </Button>
         </a>
 
         {/* Trust Line */}
-        <p className="text-xs text-gray-500 mt-4">
+        <p className="text-xs text-gray-500 mt-5 font-medium">
           ⏰ Please join immediately to avoid missing session links
         </p>
 
@@ -78,3 +111,5 @@ export const ThankYouPage = () => {
     </section>
   );
 };
+
+export default ThankYouPage;

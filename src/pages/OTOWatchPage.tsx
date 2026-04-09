@@ -9,7 +9,13 @@ import {
   Clock,
   Loader2
 } from 'lucide-react';
-import { useFacebookPixel } from "@/hooks/usePIxelWatch";
+// import { useFacebookPixel } from "@/hooks/usePIxelWatch";
+import { useUTMParams } from "@/hooks/useUTMParams";
+import { useRazorpay } from "@/hooks/useRazorpay";
+import { toast } from "sonner";
+import { trackAddToCart, trackFormSubmit, trackPurchase } from "@/utils/gtm";
+// Updated import to include PRODUCT2
+import { ORDER, PRODUCT2, PRODUCT2_OTO, RAZORPAY_DESCRIPTION, RAZORPAY_PRODUCT_NAME, WEBINAR_NAME_2 } from "@/utils/product-info";
 
 /* 🔗 APPS SCRIPT URL */
 const SCRIPT_URL =
@@ -28,17 +34,15 @@ const books = [
 ];
 
 export const OTOWatchPage = () => {
-  useFacebookPixel({
-    eventName: "Lead_Watch",
-  });
-
+  const utmParams = useUTMParams();
+  const { initiatePayment, loading: razorpayLoading } = useRazorpay();
+  const [fireAddToCart, setFireAddToCart] = useState(false);
   const [choice, setChoice] = useState<'yes' | 'no' | null>(null);
   const [loading, setLoading] = useState(false);
   const [whatsappLink, setWhatsappLink] = useState("https://hi.switchy.io/hiswitchywatch");
 
   useEffect(() => {
     document.title = "Wristwatch Workshop | Ankiit Btra";
-    
     fetch(DATE_TIME_CSV)
       .then((res) => res.text())
       .then((text) => {
@@ -54,14 +58,19 @@ export const OTOWatchPage = () => {
       .catch(() => console.error("Failed to fetch WhatsApp link from sheet"));
   }, []);
 
+  // --- RETRIEVE DATA FROM PARAMS OR SESSION STORAGE ---
   const params = new URLSearchParams(window.location.search);
-  const fullName = params.get('full_name') || '';
-  const email = params.get('email') || '';
-  const phone = params.get('phone') || '';
-  const city = params.get('city') || 'NA';
-  const profession = params.get('profession') || 'OTO_LEAD';
-  const ageRange = params.get('age_range') || 'OTO_LEAD';
-  const utmSource = params.get('utm_source') || 'facebook';
+  const savedData = JSON.parse(sessionStorage.getItem("user_details") || "{}")
+
+  console.log("Saved Data from Session Storage:", savedData);
+  const fullName = savedData.full_name || '';
+  const email = savedData.email || '';
+  const phone = savedData.phone || '';
+  const city = savedData.city || '';
+  const profession =  savedData.profession || '';
+  const ageRange = savedData.age_range || '';
+  const transactionId = savedData.transaction_id || '';
+  const workshop = savedData.workshop || '';
 
   const trackToSheet = async (status: string) => {
     try {
@@ -71,12 +80,13 @@ export const OTOWatchPage = () => {
         phone: phone,
         profession: profession,
         age_range: ageRange,
-        utm_source: utmSource,
+        transactionId: transactionId,
+        workshop: workshop,
+        ...utmParams,
+        utm_source: "facebook",
         utm_campaign: "wristwatch_workshop",
-        utm_term: status, 
-        utm_content: "",
+        utm_term: status,
       });
-
       await fetch(SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
@@ -87,12 +97,13 @@ export const OTOWatchPage = () => {
     }
   };
 
-  /* FIXED: Function for the top Join button to update sheet */
   const handleTopJoin = async () => {
     if (loading) return;
     setLoading(true);
     
-    // Treat top button click as skipping the offer (free_skip)
+    // GTM: Track Add to Cart for the free product when clicking top button
+    // trackAddToCart(PRODUCT2);
+
     if (fullName || email || phone) {
       await trackToSheet("free_skip");
     }
@@ -100,26 +111,66 @@ export const OTOWatchPage = () => {
   };
 
   const handleContinue = async () => {
-    if (!choice || loading) return; 
+    if (!choice || loading || razorpayLoading) return; 
     setLoading(true);
-
+    
     const status = choice === 'yes' ? "paid_selected" : "free_skip";
-
+    
     if (fullName || email || phone) {
-        await trackToSheet(status);
+      await trackToSheet(status);
     }
 
     if (choice === 'yes') {
-      const razorpayBase = 'https://pages.razorpay.com/pl_S6a2oIr2Ld8yo0/view';
-      const queryParams = new URLSearchParams({
-        full_name: fullName,
-        email: email,
-        phone: phone,
-        city: city,
-        course_name: 'Wrist Watch Workshop - FB',
-      }).toString();
-      window.location.href = `${razorpayBase}?${queryParams}`;
+      const product = PRODUCT2_OTO;
+      const workshop = `${WEBINAR_NAME_2} FB + 5 ebooks bundle`;
+      // setFireAddToCart(true);
+      trackAddToCart(product);
+      trackFormSubmit({
+        formData: {
+          name: fullName,
+          email: email,
+          phone: phone,
+          city: city,
+          courseName: product.item_name,
+          oto: "yes"
+        }, 
+        formName: "OTO Watch Form"
+      });
+
+      const result = await initiatePayment({
+        amount: product.price,
+        productName: RAZORPAY_PRODUCT_NAME,
+        description: RAZORPAY_DESCRIPTION,
+        prefill: {
+          name: fullName,
+          email: email,
+          contact: phone,
+        },
+        notes: {
+          ...utmParams,
+          page_url: window.location.href,
+          workshop: workshop,
+          payment_id : transactionId,
+        }
+      });
+
+      if (result.status === "success") {
+        const successParams = new URLSearchParams({
+          payment_id: result.paymentId || "",
+          order_id: result.orderId || "",
+          transaction_id: transactionId || "",
+          ...utmParams
+        });
+        window.location.href = `/oto-watch-fb-ty?${successParams.toString()}`;
+      } else {
+        if (result.error !== "Payment cancelled by user") {
+          toast.error(result.error || "Payment failed");
+        }
+        setLoading(false);
+      }
     } else {
+      // GTM: Track Add to Cart for PRODUCT2 when "Nahi, Upgrade Skip" is selected
+      trackAddToCart(PRODUCT2);
       window.location.href = whatsappLink;
     }
   };
@@ -134,7 +185,6 @@ export const OTOWatchPage = () => {
     <section className="min-h-screen bg-[#0b0b0b] py-10 md:py-20 text-white font-sans">
       <div className="container max-w-7xl mx-auto px-4">
         <div className="flex flex-col items-center mb-12">
-          {/* UPDATED: Changed from <a> to <button> to trigger lead update */}
           <button
             onClick={handleTopJoin}
             disabled={loading}
@@ -149,7 +199,6 @@ export const OTOWatchPage = () => {
           </button>
           <p className="mt-3 text-red-600 font-bold text-[11px] md:text-sm text-center">Note: WhatsApp Group join karna mandatory hai.</p>
         </div>
-
         <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-12 items-start">
           <div>
             <div className="inline-flex items-center gap-2 bg-[#1a1a1a] border border-[#d4af37]/30 rounded-full px-4 py-1 text-sm font-semibold text-[#d4af37] mb-5">
@@ -162,7 +211,6 @@ export const OTOWatchPage = () => {
               Aapka <span className="font-semibold text-white">Wristwatch Analysis unlock</span> ho gaya hai.
               <br />Ab next step hai <span className="font-semibold text-white">paisa + clients + growth</span> ko boost karna — sirf <span className="font-semibold text-[#d4af37]">₹99</span> mein.
             </p>
-
             <div className="mt-10 bg-[#121212] rounded-2xl border border-white/10 p-4 sm:p-6">
               <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Gift className="h-5 w-5 text-[#d4af37]" /> Aapko kya milega (5 Ebooks Bundle)</h3>
               <div className="grid grid-cols-3 gap-3 sm:hidden">
@@ -192,7 +240,6 @@ export const OTOWatchPage = () => {
               </div>
             </div>
           </div>
-
           <div className="bg-white text-[#0b0b0b] rounded-3xl shadow-2xl p-6 md:p-8 sticky top-6">
             <p className="text-[10px] text-gray-500 text-center mb-1 uppercase tracking-widest font-bold">One last step</p>
             <h3 className="text-xl font-bold text-center mb-6 px-2">Choose Yes / No in this section</h3>
@@ -204,7 +251,6 @@ export const OTOWatchPage = () => {
                 </div>
                 <span className="shrink-0 flex items-center gap-1 bg-green-600 text-white text-[10px] md:text-[11px] px-2 py-1 rounded-lg font-bold uppercase tracking-tighter">+ <MiniWhatsAppLogo /> WhatsApp Group Join</span>
               </label>
-
               <label className={`flex items-center justify-between flex-wrap gap-2 border rounded-2xl p-3 md:p-4 cursor-pointer transition-all duration-300 ${choice === 'no' ? 'border-gray-400 bg-gray-50' : 'border-gray-200'}`}>
                 <div className="flex items-center gap-2 min-w-0">
                   <input type="radio" name="oto" checked={choice === 'no'} onChange={() => setChoice('no')} className="w-4 h-4 md:w-5 md:h-5 accent-gray-600 shrink-0" />
@@ -213,14 +259,13 @@ export const OTOWatchPage = () => {
                 <span className="shrink-0 flex items-center gap-1 bg-green-600 text-white text-[10px] md:text-[11px] px-2 py-1 rounded-lg font-bold uppercase tracking-tighter">+ <MiniWhatsAppLogo /> WhatsApp Group Join</span>
               </label>
             </div>
-
             <button
-              disabled={!choice || loading}
+              disabled={!choice || loading || razorpayLoading}
               onClick={handleContinue}
               className={`mt-6 w-full flex items-center justify-center gap-2 font-bold text-lg py-4 rounded-full transition-all duration-300 shadow-lg active:scale-95 disabled:opacity-40
                 ${choice === 'no' ? 'bg-[#25D366] text-white hover:bg-[#1ebd5b]' : 'bg-[#d4af37] text-black hover:bg-[#c9a634]'}`}
             >
-              {loading ? <Loader2 className="animate-spin h-6 w-6" /> : (
+              {(loading || razorpayLoading) ? <Loader2 className="animate-spin h-6 w-6" /> : (
                 <>
                   {choice === 'no' && <MiniWhatsAppLogo />}
                   {choice === 'no' ? 'Join WhatsApp Group' : 'Confirm & Continue'}

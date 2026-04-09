@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import SubscribeButton from '../../SubscribeButton';
 
 export const WhatYouLearnSection = () => {
   const scrollToRegister = () => {
@@ -72,13 +73,14 @@ export const WhatYouLearnSection = () => {
         </div>
 
         {/* CTA */}
-        <div className="text-center">
-          <button
+        <div className="text-center flex justify-center">
+          <SubscribeButton
+            href="#register"
+            ctaLocation="what_you_learn_section"
             onClick={scrollToRegister}
-            className="bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold px-8 py-3 rounded-xl text-base transition"
-          >
-            FREE Wristwatch Workshop
-          </button>
+            label="FREE Wristwatch Workshop"
+            className="bg-[#F4C063] hover:bg-[#eab14f] text-black font-bold px-8 py-3 rounded-xl text-base transition flex items-center justify-center"
+          />
         </div>
 
       </div>

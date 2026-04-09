@@ -3,6 +3,8 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { Calendar, Clock, Globe, Video, Star } from "lucide-react";
 import { ScrollZodiac } from "@/components/sections/ScrollZodiac";
 import { Link } from "react-router-dom";
+import SubscribeButton from "@/components/SubscribeButton";
+import {  DISCOUNTED_PRICE, OTO_OG_PRICE, OTO_DISCOUNTED_PRICE } from '@/utils/product-info';
 
 /** ✅ Your published CSV url */
 const SHEET_CSV_URL =
@@ -213,7 +215,7 @@ export const HeroSection = () => {
 
                 <div className="w-12 h-1 bg-[#04343B] mx-auto my-4 rounded-full" />
 
-                <Link to="/oto-ga">
+                {/* <Link to="/oto-ga">
                   <button
                     className="
                       w-full
@@ -231,7 +233,26 @@ export const HeroSection = () => {
                   >
                     Reserve Your Seat @ ₹99
                   </button>
-                </Link>
+                </Link> */}
+                <Link to="/oto-ga">
+                <SubscribeButton
+                  className="
+                    w-full
+                    bg-[#FEA116]
+                    hover:bg-[#FEA116]
+                    text-white
+                    font-bold
+                    py-4
+                    rounded-xl
+                    text-lg
+                    transition-all
+                    duration-300
+                    shadow-lg
+                  "
+                  label={`Reserve Your Seat @ ${DISCOUNTED_PRICE}`}
+                  ctaLocation="hero-section"
+                />
+              </Link>
 
                 <div className="flex justify-center mt-4">
                   <CountdownTimer />

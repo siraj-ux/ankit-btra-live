@@ -2,20 +2,49 @@ import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { useFacebookPixel } from "@/hooks/useFacebookPixel";
+import { trackPurchase } from '@/utils/gtm';
+import { DISCOUNTED_PRICE, GA_ORDER, GA_PRODUCT1 } from '@/utils/product-info';
 
 
 export const ThankYouPageGa = () => {
-    useFacebookPixel({
-    eventName: "Purchase NNW",
-    eventParams: {
-      content_name: "LP2_Product",
-      content_category: "LP2_Offer",
-      content_ids: ["LP2_IN_99"],
-      content_type: "product",
-      value: 99,
-      currency: "INR",
-    },
-  });
+  //   useFacebookPixel({
+  //   eventName: "Purchase NNW",
+  //   eventParams: {
+  //     content_name: "LP2_Product",
+  //     content_category: "LP2_Offer",
+  //     content_ids: ["LP2_IN_99"],
+  //     content_type: "product",
+  //     value: 99,
+  //     currency: "INR",
+  //   },
+    
+
+  // });
+
+  useEffect(() => {
+      // 1. Get payment ID from URL
+      const params = new URLSearchParams(window.location.search);
+      const paymentId = params.get("payment_id") || params.get("razorpay_payment_id");
+  
+      if (paymentId) {
+        // 2. Prevent duplicate tracking on page refresh
+        const alreadyTracked = localStorage.getItem(`tracked_${paymentId}`);
+        if (alreadyTracked) return;
+        
+        localStorage.setItem(`tracked_${paymentId}`, "true");
+      }
+  
+      // 3. Fire GTM Purchase Event
+      trackPurchase({
+        ...GA_ORDER,
+        value: DISCOUNTED_PRICE,
+        items: [
+          {...GA_PRODUCT1}
+        ],
+        transaction_id: paymentId || `txn_${Date.now()}`,
+      });
+    }, []);
+    
   return (
     <section className="min-h-screen bg-[#04343b] flex items-center justify-center px-4">
       <div className="max-w-xl w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center">

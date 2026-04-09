@@ -1,23 +1,52 @@
 import { CheckCircle, ArrowRight, MessageCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useFacebookPixel } from "@/hooks/useFacebookPixel";
+import { useEffect } from 'react'; // ✅ Added useEffect
+// import { useFacebookPixel } from "@/hooks/useFacebookPixel";
+import { trackPurchase } from "@/utils/gtm"; // ✅ Added GTM tracking
+import { ORDER, OTO_OG_PRICE, PRODUCT1_OTO } from "@/utils/product-info"; // ✅ Added Order info
 
 export const ThankYouPageOtoFb = () => {
-  useFacebookPixel({
-    eventName: "Purchase",
-    eventParams: {
-      content_name: "LP2_OTO_Product",
-      content_category: "LP2_OTO",
-      content_ids: ["LP2_IN_OTO_199"],
-      content_type: "product",
-      value: 499,
-      currency: "INR",
-    },
-  });
+  // /* 🔥 FACEBOOK PIXEL TRACKING (Value: 499) */
+  // useFacebookPixel({
+  //   eventName: "Purchase",
+  //   eventParams: {
+  //     content_name: "LP2_OTO_Product",
+  //     content_category: "LP2_OTO",
+  //     content_ids: ["LP2_IN_OTO_199"],
+  //     content_type: "product",
+  //     value: 499,
+  //     currency: "INR",
+  //   },
+  // });
+
+  /* ✅ GTM PURCHASE TRACKING (Value: 499) */
+  useEffect(() => {
+    // 1. Get payment ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get("payment_id") || params.get("razorpay_payment_id");
+
+    if (paymentId) {
+      // 2. Refresh Protection
+      const alreadyTracked = localStorage.getItem(`tracked_${paymentId}`);
+      if (alreadyTracked) return;
+      
+      localStorage.setItem(`tracked_${paymentId}`, "true");
+    }
+
+    // 3. Fire GTM Event (Specifically for the 499 OTO)
+    trackPurchase({
+          ...ORDER,
+          value: OTO_OG_PRICE,
+          items: [
+            {...PRODUCT1_OTO}
+          ],
+      transaction_id: paymentId || `txn_oto_${Date.now()}`,
+    });
+  }, []);
 
   return (
     <section className="min-h-screen bg-[#04343b] flex items-center justify-center px-4">
-      <div className="max-w-xl w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center">
+      <div className="max-w-xl w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center animate-in fade-in zoom-in duration-500">
 
         {/* Success Icon */}
         <div className="flex justify-center mb-4">
@@ -27,8 +56,8 @@ export const ThankYouPageOtoFb = () => {
         </div>
 
         {/* Heading */}
-        <h1 className="text-3xl md:text-4xl font-philosopher font-bold text-[#04343b] mb-2">
-          Upgrade Confirmed!
+        <h1 className="text-3xl md:text-4xl font-bold text-[#04343b] mb-2 leading-tight">
+          Upgrade Confirmed! 🎉
         </h1>
 
         {/* Sub Text */}
@@ -39,8 +68,8 @@ export const ThankYouPageOtoFb = () => {
         </p>
 
         {/* Report Delivery Info */}
-        <div className="bg-[#04343b]/5 border border-[#04343b]/10 rounded-xl p-4 mb-6 flex gap-3 items-start text-left">
-          <FileText className="h-5 w-5 text-[#04343b] mt-0.5" />
+        <div className="bg-[#04343b]/5 border border-[#04343b]/10 rounded-xl p-5 mb-6 flex gap-3 items-start text-left">
+          <FileText className="h-6 w-6 text-[#04343b] mt-0.5 flex-shrink-0" />
           <p className="text-sm text-gray-700 leading-relaxed">
             Your <strong>Destiny Report</strong> will be delivered shortly to
             your registered <strong>WhatsApp number</strong>.
@@ -52,28 +81,31 @@ export const ThankYouPageOtoFb = () => {
           href="https://hi.switchy.io/hiswitchynamennw"
           target="_blank"
           rel="noopener noreferrer"
-          className="block"
+          className="block group"
         >
           <Button
-            size="xl"
+            size="lg"
             className="
-              w-full
+              w-full h-14
               bg-green-500 hover:bg-green-600
               text-white
               font-bold
+              text-lg
               rounded-xl
               flex items-center justify-center gap-2
               shadow-lg
+              transition-all
+              group-hover:scale-[1.02]
             "
           >
             <MessageCircle className="h-5 w-5" />
             Join WhatsApp Group Now
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-5 w-5 animate-bounce-x" />
           </Button>
         </a>
 
         {/* Trust Line */}
-        <p className="text-xs text-gray-500 mt-4">
+        <p className="text-[11px] text-gray-500 mt-5 font-medium italic">
           Join the WhatsApp group to receive updates, reminders, and bonus guidance
         </p>
 
@@ -81,3 +113,5 @@ export const ThankYouPageOtoFb = () => {
     </section>
   );
 };
+
+export default ThankYouPageOtoFb;
