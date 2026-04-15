@@ -187,9 +187,10 @@ export const OTOWatchPage = () => {
         },
         notes: {
           ...utmParams,
+          ...savedData,
           page_url: window.location.href,
-          workshop: workshop,
-          payment_id : transactionId,
+          // workshop: workshop,
+          // payment_id : transactionId,
         }
       });
 
