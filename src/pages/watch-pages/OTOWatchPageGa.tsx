@@ -153,8 +153,7 @@ export const OTOWatchPageGa = () => {
   const handleContinue = async () => {
     if (!choice || loading || razorpayLoading) return; 
     setLoading(true);
-    const savedData = JSON.parse(sessionStorage.getItem("user_details") || "{}")
-
+    
     const status = choice === 'yes' ? "ga_paid_selected" : "ga_free_skip";
     
     if (fullName || email || phone) {
@@ -173,10 +172,10 @@ export const OTOWatchPageGa = () => {
 
       trackFormSubmit({
         formData: {
-          name: savedData.full_name,
-          email: savedData.email,
-          phone: savedData.phone,
-          city: savedData.city,
+          name: fullName,
+          email: email,
+          phone: phone,
+          city: city,
           courseName: product.item_name
         }, 
         formName: "OTO Watch GA Form"

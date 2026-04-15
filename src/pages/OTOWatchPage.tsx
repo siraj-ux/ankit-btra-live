@@ -149,8 +149,6 @@ export const OTOWatchPage = () => {
   const handleContinue = async () => {
     if (!choice || loading || razorpayLoading) return; 
     setLoading(true);
-    const savedData = JSON.parse(sessionStorage.getItem("user_details") || "{}")
-
     
     const status = choice === 'yes' ? "paid_selected" : "free_skip";
     
@@ -181,17 +179,15 @@ export const OTOWatchPage = () => {
         productName: RAZORPAY_PRODUCT_NAME,
         description: RAZORPAY_DESCRIPTION,
         prefill: {
-          name: savedData.full_name,
-          email: savedData.email,
-          contact: savedData.phone,
+          name: fullName,
+          email: email,
+          contact: phone,
         },
         notes: {
           ...utmParams,
-          ...savedData,
           page_url: window.location.href,
-          // workshop: workshop,
-          // payment_id : transactionId,
-          // test
+          workshop: workshop,
+          payment_id : transactionId,
         }
       });
 
