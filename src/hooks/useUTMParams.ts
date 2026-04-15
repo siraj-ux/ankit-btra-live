@@ -6,6 +6,8 @@ export interface UTMParams {
   utm_campaign: string;
   utm_content: string;
   utm_term: string;
+  gclid: string;
+  fbclid: string;
 }
 
 export const useUTMParams = (): UTMParams => {
@@ -17,6 +19,8 @@ export const useUTMParams = (): UTMParams => {
       utm_campaign: params.get('utm_campaign') || '',
       utm_content: params.get('utm_content') || '',
       utm_term: params.get('utm_term') || '',
+      gclid: params.get('gclid'),
+      fbclid: params.get('fbclid'),
     };
   }, []);
 };

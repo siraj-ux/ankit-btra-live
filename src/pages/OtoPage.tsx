@@ -9,8 +9,11 @@ import AddToCartButton from "@/components/AddToCartButton";
 import { toast } from "sonner";
 import { PRODUCT1, PRODUCT1_OTO, RAZORPAY_DESCRIPTION, RAZORPAY_PRODUCT_NAME, WEBINAR_NAME_1 } from "@/utils/product-info";
 import { trackAddToCart, trackFormSubmit } from "@/utils/gtm";
+import { useGoogleSheet } from "@/hooks/useGoogleSheet";
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNqQghsxa10pLaJKRryPO0fs0-02M4diS9pJ2RwZVisD0KeN5q97BZehzijb1LBKLlRQ/exec";
+
+const GOOGLE_SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbxvwM7-yIPpgIW-7gdWBuLMEEcDvHq-Xz3piCgolOUkY1TfEPH9oneyOrnxmCpyC38v/exec";
 
 interface FormData {
   name: string;
@@ -32,7 +35,9 @@ interface FormErrors {
 }
 
 export default function OtoPage() {
-  const utmParams = useUTMParams();
+  const utmParams = typeof window !== "undefined"
+  ? JSON.parse(localStorage.getItem("utm_params") || "{}")
+  : {};
   const { initiatePayment, loading: razorpayLoading } = useRazorpay();
 
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
@@ -108,27 +113,48 @@ export default function OtoPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  /* ✅ SYNC DATA TO GOOGLE SHEETS */
-  const sendToGoogleSheets = async () => {
-    try {
-      const body = new URLSearchParams({
-        ...formData,
-        ...utmParams,
-        upgrade: upgrade499 ? "499" : "99",
-        pageUrl: window.location.href,
-        timestamp: new Date().toISOString(),
-      });
-      await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: 'no-cors', body });
-    } catch (err) {
-      console.error("Sheet Sync Error:", err);
-    }
-  };
+  // /* ✅ SYNC DATA TO GOOGLE SHEETS */
+  // const sendToGoogleSheets = async () => {
+  //   try {
+  //     const body = new URLSearchParams({
+  //       ...formData,
+  //       ...utmParams,
+  //       upgrade: upgrade499 ? "499" : "99",
+  //       pageUrl: window.location.href,
+  //       timestamp: new Date().toISOString(),
+  //     });
+  //     await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: 'no-cors', body });
+  //   } catch (err) {
+  //     console.error("Sheet Sync Error:", err);
+  //   }
+  // };
+
+      const sendToGoogleSheets = async () => {
+      try {
+        const body = new URLSearchParams({
+          ...formData,
+          ...utmParams,
+          upgrade: upgrade499 ? "499" : "99",
+          pageUrl: window.location.href,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Send to both sheets
+        await Promise.all([
+          fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", body }),
+          fetch(GOOGLE_SCRIPT_URL_NEW, { method: "POST", mode: "no-cors", body })
+        ]);
+
+      } catch (err) {
+        console.error("Sheet Sync Error:", err);
+      }
+    };
 
   /* ✅ FORM SUBMISSION & RAZORPAY POPUP */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-
+   
     setIsSubmitting(true);
 
     trackFormSubmit({

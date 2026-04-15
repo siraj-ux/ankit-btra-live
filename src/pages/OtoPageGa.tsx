@@ -15,6 +15,9 @@ import { toast } from "@/components/ui/sonner";
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNqQghsxa10pLaJKRryPO0fs0-02M4diS9pJ2RwZVisD0KeN5q97BZehzijb1LBKLlRQ/exec";
 
+const GOOGLE_SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbxvwM7-yIPpgIW-7gdWBuLMEEcDvHq-Xz3piCgolOUkY1TfEPH9oneyOrnxmCpyC38v/exec";
+
+
 interface FormData {
   name: string;
   email: string;
@@ -35,7 +38,10 @@ interface FormErrors {
 }
 
 export default function OtoPage() {
-  const utmParams = useUTMParams();
+  // const utmParams = useUTMParams();
+  const utmParams = typeof window !== "undefined"
+  ? JSON.parse(localStorage.getItem("utm_params") || "{}")
+  : {};
 
   // Fix for SSR: check if window is defined
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
@@ -77,8 +83,8 @@ export default function OtoPage() {
     setFormData((prev) => ({
       ...prev,
       courseName: upgrade499
-        ? "Name Numerology NNW Workshop + 5 Year Destiny Report - FB"
-        : "Name Numerology NNW Workshop - FB1",
+        ? "Name Numerology NNW Workshop + 5 Year Destiny Report - GA1"
+        : "Name Numerology NNW Workshop - GA1",
     }));
   }, [upgrade499]);
 
@@ -106,20 +112,41 @@ export default function OtoPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const sendToGoogleSheets = async () => {
-    try {
-      const body = new URLSearchParams({
-        ...formData,
-        ...utmParams,
-        upgrade: upgrade499 ? "499" : "99",
-        pageUrl: window.location.href,
-        timestamp: new Date().toISOString(),
-      });
-      await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: 'no-cors', body });
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  // const sendToGoogleSheets = async () => {
+  //   try {
+  //     const body = new URLSearchParams({
+  //       ...formData,
+  //       ...utmParams,
+  //       upgrade: upgrade499 ? "499" : "99",
+  //       pageUrl: window.location.href,
+  //       timestamp: new Date().toISOString(),
+  //     });
+  //     await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: 'no-cors', body });
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // };
+
+    const sendToGoogleSheets = async () => {
+      try {
+        const body = new URLSearchParams({
+          ...formData,
+          ...utmParams,
+          upgrade: upgrade499 ? "499" : "99",
+          pageUrl: window.location.href,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Send to both sheets
+        await Promise.all([
+          fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", body }),
+          fetch(GOOGLE_SCRIPT_URL_NEW, { method: "POST", mode: "no-cors", body })
+        ]);
+
+      } catch (err) {
+        console.error("Sheet Sync Error:", err);
+      }
+    };
 
 
 

@@ -11,13 +11,21 @@ import { FAQSection } from '@/components/sections/FAQSection';
 import { FinalCTASection } from '@/components/sections/FinalCTASection';
 import { StickyMobileCTA } from '@/components/StickyMobileCTA';
 import { useFacebookPixel } from "@/hooks/useFacebookPixelHome";
-
+import { getUTMParams } from "@/utils/gtm";
 
 const Index = () => {
   const heroRef = useRef<HTMLDivElement>(null);
 
 // useFacebookPixel()
+  useEffect(() => {
+    const utmParams = getUTMParams();
 
+    const hasParams = Object.values(utmParams).some(value => value);
+
+    if (hasParams) {
+      localStorage.setItem("utm_params", JSON.stringify(utmParams));
+    }
+  }, []);
 
 
   const scrollToHero = () => {

@@ -24,6 +24,9 @@ import {
 const SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycby6O9cD_HsMp9Ws8QJmI2UtvCAmY1uyTDa7wgBfCnEJtSNH-L0GOoTiFMonqlcQZjxu/exec";
 
+const SCRIPT_URL_NEW ="https://script.google.com/macros/s/AKfycbwyFQFUerEL2TwXkBBQUuH0bfDLWUgCXZBCuu0j9VRXL5y9FEAwIK89yTD6nblyGRXcZQ/exec"
+
+
 /* 🔗 DATE & TIME & WHATSAPP CSV */
 const DATE_TIME_CSV =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA1mZDhz4voyKH_izB4TrrAX2MXMc5Dm3AiGjuLftCweG8I_FY9Z1SZcTHwd_ymhP2LtrFPrU-feDX/pub?gid=18023713&single=true&output=csv";
@@ -75,28 +78,65 @@ export const OTOWatchPageGa = () => {
   const transactionId = savedData.transaction_id || '';
   const workshop = savedData.workshop || '';
 
-  const trackToSheet = async (status: string) => {
-    try {
-      // BACKUP: Get from Session Storage if URL params are missing
-    
-      const body = new URLSearchParams({
-        name: fullName, 
-        email: email,
-        phone: phone,
-        profession: profession,
-        age_range: ageRange,
-        transactionId: transactionId,
-        workshop: workshop,
-        ...utmParams,
-        utm_source: "google",
-        utm_campaign: "wristwatch_workshop",
-        utm_term: status
-      });
-      await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body });
-    } catch (error) {
-      console.error("Sheet update failed", error);
-    }
-  };
+ const trackToSheet = async (status: string) => {
+  try {
+    // ✅ OLD SHEET BODY (unchanged)
+    const oldBody = new URLSearchParams({
+      name: fullName,
+      email: email,
+      phone: phone,
+      profession: profession,
+      age_range: ageRange,
+      transactionId: transactionId,
+      workshop: workshop,
+      ...utmParams,
+      utm_source: "facebook",
+      utm_campaign: "wristwatch_workshop",
+      utm_term: status,
+    });
+
+    // ✅ NEW SHEET BODY (as per your new columns)
+    const newBody = new URLSearchParams({
+      name: fullName,
+      email: email,
+      phone: phone,
+      profession: profession,
+      age_range: ageRange,
+
+      // 🔥 NEW REQUIRED FIELDS
+      workshop_name: "wristwatch_workshop_ga",
+      product_type: status, // free_skip / paid_selected
+      page_url: window.location.href,
+
+      // 🔥 UTM PARAMS
+      utm_source: utmParams.utm_source || "",
+      utm_medium: utmParams.utm_medium || "",
+      utm_campaign: utmParams.utm_campaign || "",
+      utm_term: utmParams.utm_term || "",
+      utm_content: utmParams.utm_content || "",
+      gclid: utmParams.gclid || "",
+      fbclid: utmParams.fbclid || ""
+    });
+
+    // ✅ SEND TO BOTH (different payloads)
+    await Promise.all([
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: oldBody,
+      }),
+      fetch(SCRIPT_URL_NEW, {
+        method: "POST",
+        mode: "no-cors",
+        body: newBody,
+      })
+    ]);
+
+  } catch (error) {
+    console.error("Sheet update failed", error);
+  }
+};
+
 
   const handleTopJoin = async () => {
     if (loading) return;

@@ -10,12 +10,22 @@ import { MentorSection } from '@/components/sections/ga/MentorSection';
 import { FAQSection } from '@/components/sections/ga/FAQSection';
 import { FinalCTASection } from '@/components/sections/ga/FinalCTASection';
 import { StickyMobileCTA } from '@/components/StickyMobileCTAGa';
+import { getUTMParams } from "@/utils/gtm";
 
 
 
 const IndexGa = () => {
   const heroRef = useRef<HTMLDivElement>(null);
-
+  useEffect(() => {
+      const utmParams = getUTMParams();
+  
+      const hasParams = Object.values(utmParams).some(value => value);
+  
+      if (hasParams) {
+        localStorage.setItem("utm_params", JSON.stringify(utmParams));
+      }
+    }, []);
+  
   const scrollToHero = () => {
     heroRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
