@@ -69,12 +69,12 @@ export const OTOWatchPageGa = () => {
   const savedData = JSON.parse(sessionStorage.getItem("user_details") || "{}")
 
   console.log("Saved Data from Session Storage:", savedData);
-  const fullName = savedData.full_name || '';
-  const email = savedData.email || '';
-  const phone = savedData.phone || '';
-  const city = savedData.city || '';
-  const profession =  savedData.profession || '';
-  const ageRange = savedData.age_range || '';
+  const fullName = savedData.full_name || params.get('full_name') || '';
+  const email = savedData.email || params.get('email') || '';
+  const phone = savedData.phone || params.get('phone') || '';
+  const city = savedData.city || params.get('city') || '';
+  const profession = savedData.profession || params.get('profession') || '';
+  const ageRange = savedData.age_range || params.get('age_range') || '';
   const transactionId = savedData.transaction_id || '';
   const workshop = savedData.workshop || '';
 
