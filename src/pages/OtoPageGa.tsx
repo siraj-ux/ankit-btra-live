@@ -58,7 +58,7 @@ export default function OtoPage() {
     city: "",
     dob: prefilledDob,
     gender: "",
-    courseName: "Name Numerology NNW Workshop - FB1",
+    courseName: "Name Numerology NNW Workshop GA",
   });
   const {initiatePayment, loading, error} = useRazorpay();
   const [errors, setErrors] = useState<FormErrors>({});
@@ -83,8 +83,8 @@ export default function OtoPage() {
     setFormData((prev) => ({
       ...prev,
       courseName: upgrade499
-        ? "Name Numerology NNW Workshop + 5 Year Destiny Report - GA1"
-        : "Name Numerology NNW Workshop - GA1",
+        ? "Name Numerology NNW Workshop GA + 5 Year Destiny Report"
+        : "Name Numerology NNW Workshop GA",
     }));
   }, [upgrade499]);
 
@@ -182,6 +182,9 @@ export default function OtoPage() {
         notes: {
           ...formData,
           ...utmParams,
+          full_name: formData.name,
+          email_: formData.email,
+          phone_: formData.phone,
           page_url: window.location.href,
           workshop: workshopName,
         }

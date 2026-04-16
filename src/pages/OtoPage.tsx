@@ -54,7 +54,7 @@ export default function OtoPage() {
     city: "",
     dob: prefilledDob,
     gender: "",
-    courseName: "Name Numerology NNW Workshop - FB1",
+    courseName: "Name Numerology NNW Workshop FB",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -81,8 +81,8 @@ export default function OtoPage() {
     setFormData((prev) => ({
       ...prev,
       courseName: upgrade499
-        ? "Name Numerology NNW Workshop + 5 Year Destiny Report - FB"
-        : "Name Numerology NNW Workshop - FB1",
+        ? "Name Numerology NNW Workshop FB + 5 Year Destiny Report"
+        : "Name Numerology NNW Workshop FB",
       gender: upgrade499 ? prev.gender : "",
       dob: upgrade499 ? prev.dob : "",
     }));
@@ -182,6 +182,9 @@ export default function OtoPage() {
       notes: {
         ...formData,
         ...utmParams,
+        full_name: formData.name,
+        email_: formData.email,
+        phone_: formData.phone,
         page_url: window.location.href,
         workshop: workshopName
       }

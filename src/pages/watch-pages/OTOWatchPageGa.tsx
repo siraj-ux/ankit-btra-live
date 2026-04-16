@@ -75,7 +75,7 @@ export const OTOWatchPageGa = () => {
   const city = savedData.city || params.get('city') || '';
   const profession = savedData.profession || params.get('profession') || '';
   const ageRange = savedData.age_range || params.get('age_range') || '';
-  const transactionId = savedData.transaction_id || '';
+  const transactionId = savedData.transactionId || '';
   const workshop = savedData.workshop || '';
 
  const trackToSheet = async (status: string) => {
@@ -191,8 +191,11 @@ export const OTOWatchPageGa = () => {
           contact: phone,
         },
         notes: {
-          ...savedData,
+          full_name: fullName,
+          email_: email,
+          phone_: phone,
           ...utmParams,
+          ...savedData,
           workshop: workshop,
           page_url: window.location.href,
         }
